@@ -8,7 +8,7 @@ VKapi::VKapi()
 
 VKapi::~VKapi()
 {
-	delete curl;
+    //delete curl;
 }
 
 void VKapi::setScopes(const Scopes& scopes)
@@ -237,7 +237,10 @@ std::string VKapi::parseVKHTML()
 	{
 		err.b = true;
 		err.msg = root["error"].get("error_msg", "false").asString();
-	}
+    }else{
+        err.b = false;
+        err.msg = "";
+    }
 
 	return buffer;
 }
