@@ -1,57 +1,90 @@
 #include <vector>
+#include "jsoncpp/include/json/json.h" // -ljsoncpp -L. (include libjsoncpp.a)
 #include <curl/curl.h>
 #include <boost/regex.hpp>
+#include "FileDownloader.h"
 
 class VKapi
 {
 public:
+
+	struct Errors
+	{
+		bool b;
+		std::string msg;
+	};
+
+	struct Song
+	{
+		std::string artist;
+		std::string title;
+		std::string url;
+
+	};
+
 	typedef std::vector<std::string> Scopes;
+	typedef std::vector<Song> Musics;
 	
 	VKapi();
-	virtual ~VKapi();
+	~VKapi();
 
-	virtual void setScopes(const Scopes& scopes);
-	virtual Scopes getScopes() const;
+	void setScopes(const Scopes& scopes);
+	Scopes getScopes() const;
 	
-	virtual void setRedirectUri(const std::string& ruri);
-	virtual std::string getRedirectUri() const;
+	void setRedirectUri(const std::string& ruri);
+	std::string getRedirectUri() const;
 	
-	virtual void setClientId(const std::string& client_id);
-	virtual std::string getClientId() const;
+	void setClientId(const std::string& client_id);
+	std::string getClientId() const;
 
-	virtual void setDisplay(const std::string& type);
-	virtual std::string getDisplay() const;
-	
-	virtual void setVersion(const double v);
-	virtual double getVersionD() const;
-	virtual std::string getVersionS() const;
-	
-	virtual void setRevoke(const bool rev);
-	virtual bool getRevoke() const;
-	
-	virtual void setAccessToken(const std::string& access_token);
-	virtual std::string getAccessTokenFromHeaders(std::string headers);
-	virtual std::string getAccessToken() const;
+	void setDisplay(const std::string& type);
+	std::string getDisplay() const;
 
-	virtual std::string parseVKHTML();
-	//virtual void setVKHTML(std::string html);
+	void Authorization();
+	
+	void setVersion(const double v);
+	double getVersionD() const;
+	std::string getVersionS() const;
+	
+	void setRevoke(const bool rev);
+	bool getRevoke() const;
+	
+	void setAccessToken(const std::string& access_token);
+	std::string getAccessTokenFromHeaders(std::string headers);
+	std::string getAccessToken() const;
+
+	std::string parseVKHTML();
+
+	void parseMusic(std::string json);
+
+	std::string parseMusicLink(std::string link);
+
+	Musics getMusic() const;
+
+	bool DownloadFile(std::string url, std::string filename);
 
 	void setLogin(const std::string& login);
 	void setPassword(const std::string& password);
 	std::string getLogin() const;
 	std::string getPassword() const;
 
+	Errors getLastError();
+
+
 	static int writer(char *data, size_t size, size_t nmemb, std::string *buffer);
+	static size_t DownloadedFileWriter(void *ptr, size_t size, size_t nmemb, FILE *stream);
+
 
 	void curlCheckError(CURL* curl, int result, char* errorBuffer);
 
-
 protected:
-	virtual void sendRequest(std::string& buff);
-	virtual std::string recvRequest() const;
+	void sendRequest(std::string& buff);
+	std::string recvRequest() const;
 
 
 private:
+	FileDownloader downloader;
+
 	std::string _login;
 	std::string _password;
 
@@ -64,4 +97,9 @@ private:
 	std::string _ruri;
 	std::string _display;
 	CURL* curl;
+
+	Errors err;
+
+	Musics _jsonMusic;
+
 };

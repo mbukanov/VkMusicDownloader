@@ -2,12 +2,13 @@
 
 VKapi::VKapi()
 {
-
+	err.b = false;
+	err.msg = "";
 }
 
 VKapi::~VKapi()
 {
-
+	delete curl;
 }
 
 void VKapi::setScopes(const Scopes& scopes)
@@ -101,12 +102,6 @@ std::string VKapi::getAccessTokenFromHeaders(std::string headers)
 
     while(boost::regex_search(iStart, iEnd, smatch_data, regex_at))
     {
-    	/* debug 
-        std::cout<<"0: "<< smatch_data[0]<<std::endl;
-        std::cout<<"1: "<< smatch_data[1]<<std::endl;
-        std::cout<<"2: "<< smatch_data[2]<<std::endl;
-        std::cout<<"3: "<< smatch_data[3]<<std::endl;
-        */
         result = smatch_data[1];
         iStart = smatch_data[0].second;
     }
@@ -134,6 +129,48 @@ int VKapi::writer(char *data, size_t size, size_t nmemb, std::string *buffer)
 	return result;
 }
 
+size_t VKapi::DownloadedFileWriter(void *ptr, size_t size, size_t nmemb, FILE *stream) 
+{
+	size_t written;
+	written = fwrite(ptr, size, nmemb, stream);
+	return written;
+}
+
+/*
+	Authorization()
+
+	Send request with Login and Password to authorization page
+	Request is page with HTML: Grant access if auth success, login page if auth failure
+*/
+void VKapi::Authorization()
+{
+	if(!curl)
+		return;
+
+	char errorBuffer[CURL_ERROR_SIZE];
+
+	std::string url = "https://login.vk.com/?act=login&soft=1&utf8=1"; 
+	std::string request = "_origin=https://oauth.vk.com";
+    request += "&ip_h=62371f194b8af424e4";	// it need parse
+    request += "&to=aHR0cHM6Ly9vYXV0aC52ay5jb20vYXV0aG9yaXplP2NsaWVudF9pZD00NTYxOTg5JnJlZGlyZWN0X3VyaT1odHRwJTNBJTJGJTJGYXBpLnZrb250YWt0ZS5ydSUyRmJsYW5rLmh0bWwmcmVzcG9uc2VfdHlwZT10b2tlbiZzY29wZT04JnY9NS4yNCZzdGF0ZT0mcmV2b2tlPTEmZGlzcGxheT1tb2JpbGU-"; // redirect url to base64
+    request += "&email="+getLogin();
+    request += "&pass="+getPassword();
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.c_str());
+    CURLcode result = curl_easy_perform(curl);
+	curlCheckError(curl, result, errorBuffer); 
+}
+
+
+/*
+	parseVKHTML
+
+	1. Parse main page, but you need authorizate(Reload on the Login page)
+	2. Authorization
+	3. Grant Access
+	4. Recv response with json of your Music
+*/
 std::string VKapi::parseVKHTML()
 {
 	std::string cookiestring = "";
@@ -171,21 +208,8 @@ std::string VKapi::parseVKHTML()
 
  
 	buffer.clear();
-
-	url = "https://login.vk.com/?act=login&soft=1&utf8=1"; 
-	request = "_origin=https://oauth.vk.com";
-    request += "&ip_h=62371f194b8af424e4";	// it need parse
-    request += "&to=aHR0cHM6Ly9vYXV0aC52ay5jb20vYXV0aG9yaXplP2NsaWVudF9pZD00NTYxOTg5JnJlZGlyZWN0X3VyaT1odHRwJTNBJTJGJTJGYXBpLnZrb250YWt0ZS5ydSUyRmJsYW5rLmh0bWwmcmVzcG9uc2VfdHlwZT10b2tlbiZzY29wZT04JnY9NS4yNCZzdGF0ZT0mcmV2b2tlPTEmZGlzcGxheT1tb2JpbGU-"; // redirect url to base64
-    request += "&email="+getLogin();
-    request += "&pass="+getPassword();
-
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.c_str());
-    result = curl_easy_perform(curl);
-	curlCheckError(curl, result, errorBuffer);
+	Authorization();
  
-	buffer.clear();
-
 	// grant access
 	url  = "https://login.vk.com/?act=grant_access&client_id="+getClientId();
 	url += "&settings=8&redirect_uri=http%3A%2F%2Fapi.vkontakte.ru%2Fblank.html&response_type=token&direct_hash=b6b46dc00f2a6ed6c7&token_type=0&v="+getVersionS();
@@ -205,10 +229,19 @@ std::string VKapi::parseVKHTML()
 	result = curl_easy_perform(curl);
 	curlCheckError(curl, result, errorBuffer);
 
+	Json::Value root;
+	Json::Reader reader;
+
+	bool bjsonparse = reader.parse(buffer, root);
+	if(bjsonparse && root["error"].get("error_code", 0).asInt())
+	{
+		err.b = true;
+		err.msg = root["error"].get("error_msg", "false").asString();
+	}
+
 	return buffer;
 }
 
-// Это сто девяносто восьмая строчка. Да. Лол.
 
 void VKapi::setLogin(const std::string& login)
 {
@@ -238,4 +271,50 @@ void VKapi::curlCheckError(CURL* curl, int result, char* errorBuffer)
 		curl_easy_cleanup(curl);
 		exit(0);
 	}
+}
+
+void VKapi::parseMusic(std::string json)
+{
+	Json::Value root;
+	Json::Reader reader;
+
+	bool parsingSucceful = reader.parse(json, root);
+
+	for(Json::Value::iterator it = root["response"].begin(); it != root["response"].end(); it++)
+	{
+		Song s = { (*it)["artist"].asString(), (*it)["title"].asString(), (*it)["url"].asString() };
+		_jsonMusic.push_back(s);
+	}
+}
+
+VKapi::Musics VKapi::getMusic() const
+{
+	return _jsonMusic;
+}
+
+std::string VKapi::parseMusicLink(std::string link)
+{
+	// src: https://qwerty.mp3?qwerty
+	// dst: https://qwerty.mp3
+	std::string result = "";
+	std::string::iterator iStart = link.begin();
+	std::string::iterator iEnd = link.end();
+	for(std::string::iterator it = iStart; it != iEnd; it++)
+	{
+		if( (*it) == '?' ) break;
+		result += (*it);
+	}
+	return result;
+}
+
+bool VKapi::DownloadFile(std::string url, std::string filename)
+{
+	downloader.setUrl(url);
+	downloader.setFilename(filename);
+	return downloader.Download();
+}
+
+VKapi::Errors VKapi::getLastError()
+{
+	return err;
 }
