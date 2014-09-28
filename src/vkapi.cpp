@@ -108,6 +108,44 @@ std::string VKapi::getAccessTokenFromHeaders(std::string headers)
     return result;
 }
 
+std::string VKapi::getIPhFromHeaders(std::string headers)
+{
+    boost::smatch smatch_data;
+
+    std::string::const_iterator iStart = headers.begin();
+    std::string::const_iterator iEnd = headers.end();
+
+    boost::regex regex_at("<form.+(ip_h=(\\w+|\\d+)&hash=(\\w+|\\d+)).+>");
+
+    std::string result;
+
+    while(boost::regex_search(iStart, iEnd, smatch_data, regex_at))
+    {
+        result = smatch_data[2];
+        iStart = smatch_data[0].second;
+    }
+    return result;
+}
+
+std::string VKapi::getHashFromHeaders(std::string headers)
+{
+    boost::smatch smatch_data;
+
+    std::string::const_iterator iStart = headers.begin();
+    std::string::const_iterator iEnd = headers.end();
+
+    boost::regex regex_at("<form.+(ip_h=(\\w+|\\d+)&hash=(\\w+|\\d+)).+>");
+
+    std::string result;
+
+    while(boost::regex_search(iStart, iEnd, smatch_data, regex_at))
+    {
+        result = smatch_data[3];
+        iStart = smatch_data[0].second;
+    }
+    return result;
+}
+
 void VKapi::sendRequest(std::string& buff)
 {
 	// todo
@@ -148,18 +186,24 @@ void VKapi::Authorization()
 		return;
 
 	char errorBuffer[CURL_ERROR_SIZE];
-
+    std::string buffer = "";	// for response
 	std::string url = "https://login.vk.com/?act=login&soft=1&utf8=1"; 
 	std::string request = "_origin=https://oauth.vk.com";
-    request += "&ip_h=62371f194b8af424e4";	// it need parse
+    //request += "&ip_h=62371f194b8af424e4";	// it need parse
     request += "&to=aHR0cHM6Ly9vYXV0aC52ay5jb20vYXV0aG9yaXplP2NsaWVudF9pZD00NTYxOTg5JnJlZGlyZWN0X3VyaT1odHRwJTNBJTJGJTJGYXBpLnZrb250YWt0ZS5ydSUyRmJsYW5rLmh0bWwmcmVzcG9uc2VfdHlwZT10b2tlbiZzY29wZT04JnY9NS4yNCZzdGF0ZT0mcmV2b2tlPTEmZGlzcGxheT1tb2JpbGU-"; // redirect url to base64
     request += "&email="+getLogin();
     request += "&pass="+getPassword();
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &VKapi::writer);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
     CURLcode result = curl_easy_perform(curl);
 	curlCheckError(curl, result, errorBuffer); 
+
+    _ip_h = getIPhFromHeaders(buffer);
+    _hash = getHashFromHeaders(buffer);
 }
 
 
@@ -178,7 +222,6 @@ std::string VKapi::parseVKHTML()
 	CURLcode result;
 	std::string buffer = "";	// for response
 	std::string url = "";	// for url
-	std::string request = ""; // for post request
 
 	char errorBuffer[CURL_ERROR_SIZE];
 	if(!curl)
@@ -206,21 +249,23 @@ std::string VKapi::parseVKHTML()
 	result = curl_easy_perform(curl);
 	curlCheckError(curl, result, errorBuffer);
 
- 
+
 	buffer.clear();
 	Authorization();
  
 	// grant access
 	url  = "https://login.vk.com/?act=grant_access&client_id="+getClientId();
-	url += "&settings=8&redirect_uri=http%3A%2F%2Fapi.vkontakte.ru%2Fblank.html&response_type=token&direct_hash=b6b46dc00f2a6ed6c7&token_type=0&v="+getVersionS();
+    url += "&settings=8&redirect_uri=http%3A%2F%2Fapi.vkontakte.ru%2Fblank.html&response_type=token&direct_hash=85bc6b0b250f6f44d1&token_type=0&v="+getVersionS();
 	url += "&state=&display="+getDisplay();
-	url += "&ip_h=62371f194b8af424e4&hash=0d01e5b2850facde66&https=1";
+    url += "&ip_h="+_ip_h;
+    url += "&hash="+_hash;
+    url += "&https=1";
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 	result = curl_easy_perform(curl);
 	curlCheckError(curl, result, errorBuffer);
 
- 
 	url = "https://api.vk.com/method/audio.get?&access_token="+getAccessTokenFromHeaders(buffer);
 	buffer.clear();
 
@@ -263,7 +308,27 @@ std::string VKapi::getLogin() const
 
 std::string VKapi::getPassword() const
 {
-	return _password;
+    return _password;
+}
+
+std::string VKapi::EscapeSpecChars(std::string &str)
+{
+    std::string result;
+    std::list<char> specChars = {
+        '\'',
+        '"',
+        '/'
+    };
+
+    std::string::iterator it;
+    for(it = str.begin(); it != str.end(); it++)
+    {
+        std::list<char>::iterator p = std::find(specChars.begin(), specChars.end(), *it);
+        if( p != specChars.end() )
+            result += "\\";
+        result += *it;
+    }
+    return result;
 }
 
 void VKapi::curlCheckError(CURL* curl, int result, char* errorBuffer)
@@ -313,6 +378,7 @@ std::string VKapi::parseMusicLink(std::string link)
 bool VKapi::DownloadFile(std::string url, std::string filename)
 {
 	downloader.setUrl(url);
+    filename = EscapeSpecChars(filename);
 	downloader.setFilename(filename);
 	return downloader.Download();
 }

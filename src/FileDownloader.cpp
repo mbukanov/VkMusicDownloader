@@ -75,5 +75,6 @@ bool FileDownloader::Download()
 {
 	createFile();
 	Request();
+    fclose(fp);
 }
 

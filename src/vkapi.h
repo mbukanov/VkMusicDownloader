@@ -2,6 +2,8 @@
 #include "jsoncpp/include/json/json.h" // -ljsoncpp -L. (include libjsoncpp.a)
 #include <curl/curl.h>
 #include <boost/regex.hpp>
+#include <algorithm>
+#include <list>
 #include "FileDownloader.h"
 
 class VKapi
@@ -50,7 +52,10 @@ public:
 	bool getRevoke() const;
 	
 	void setAccessToken(const std::string& access_token);
-	std::string getAccessTokenFromHeaders(std::string headers);
+    std::string getAccessTokenFromHeaders(std::string headers);
+    std::string getIPhFromHeaders(std::string headers);
+    std::string getHashFromHeaders(std::string headers);
+
 	std::string getAccessToken() const;
 
 	std::string parseVKHTML();
@@ -67,6 +72,8 @@ public:
 	void setPassword(const std::string& password);
 	std::string getLogin() const;
 	std::string getPassword() const;
+
+    std::string EscapeSpecChars(std::string &str);
 
 	Errors getLastError();
 
@@ -93,6 +100,8 @@ private:
 	Scopes _scopes;
 	std::string _type;
 	std::string _access_token;
+    std::string _ip_h;
+    std::string _hash;
 	double _version;
 	std::string _ruri;
 	std::string _display;
