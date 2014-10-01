@@ -4,6 +4,14 @@ VKapi::VKapi()
 {
 	err.b = false;
 	err.msg = "";
+    std::string temp_settingsFile = "settings.json";
+    std::string settingsFile = FileOperations::readFromFile(temp_settingsFile);
+    Json::Value root;
+    Json::Reader reader;
+
+    bool bjsonparse = reader.parse(settingsFile, root);
+    std::string path = root["settings"].get("save_path", "./").asString();
+    setSaveFileDirectory(path);
 }
 
 VKapi::~VKapi()
@@ -379,11 +387,29 @@ bool VKapi::DownloadFile(std::string url, std::string filename)
 {
 	downloader.setUrl(url);
     filename = EscapeSpecChars(filename);
+    filename = getSaveFileDirectory() + filename; // firectory + filename;
 	downloader.setFilename(filename);
 	return downloader.Download();
 }
 
 VKapi::Errors VKapi::getLastError()
 {
-	return err;
+    return err;
+}
+
+std::string VKapi::getSaveFileDirectory() const
+{
+    return _saveFileDirectory;
+}
+
+void VKapi::setSaveFileDirectory(std::string directory)
+{
+
+    std::string::iterator it = directory.end() - 1;
+    if(*it != '/') // for *nix
+    {
+        directory += "/";
+    };
+    std::cout << directory <<std::endl;
+    _saveFileDirectory = directory;
 }

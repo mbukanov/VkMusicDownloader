@@ -7,10 +7,16 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QMenu>
+#include <QFileDialog>
+#include <QAction>
+#include <QMenuBar>
 #include "authwidget.h"
 #include "musiclist.h"
 #include <iostream>
 #include <QMessageBox>
+#include <jsoncpp/include/json/writer.h>
+#include <fstream>
 #include "vkapi.h"
 
 class Window : public QDialog
@@ -21,6 +27,7 @@ public:
     AuthWidget * authWidget = NULL;
     MusicList * musicList = NULL;
 
+    void createMenu();
 
 private:
     VKapi *vk = NULL;
@@ -29,6 +36,9 @@ signals:
 public slots:
     void Authorization();
     void Download();
+
+    void ChooseSaveDirectory();
+    void Exit();
 
 };
 

@@ -3,10 +3,25 @@
 Window::Window(QWidget *parent) :
     QDialog(parent)
 {
+    vk = new VKapi;
     this->setLayout(new QVBoxLayout);
     authWidget = new AuthWidget(this);
     this->layout()->addWidget(authWidget);
+    createMenu();
     connect(authWidget->btnLogin, SIGNAL(clicked()), this, SLOT(Authorization()));
+}
+
+void Window::createMenu()
+{
+    QMenuBar * menuBar = new QMenuBar(this);
+    QMenu * menuFile = menuBar->addMenu("File");
+    QAction * actSavePath   = menuFile->addAction("Set save path");
+    QAction * actExit       = menuFile->addAction("Exit");
+
+    QObject::connect(actSavePath, SIGNAL(triggered()), this, SLOT(ChooseSaveDirectory()));
+    QObject::connect(actExit, SIGNAL(triggered()), this, SLOT(Exit()));
+
+    this->layout()->setMenuBar(menuBar);
 }
 
 void Window::Authorization()
@@ -32,7 +47,8 @@ void Window::Authorization()
         VKapi::Musics music = vk->getMusic();
         for(VKapi::Musics::iterator it = music.begin(); it != music.end(); it++)
         {
-            QListWidgetItem * item = new QListWidgetItem(QString::fromStdString((*it).title), musicList->musicList);
+            QString MusicTitle = QString::fromStdString((*it).artist) + " - " + QString::fromStdString((*it).title);
+            QListWidgetItem * item = new QListWidgetItem(MusicTitle, musicList->musicList);
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
             item->setCheckState(Qt::Unchecked);
             item->setData(Qt::UserRole, QString::fromStdString((*it).url));
@@ -71,3 +87,45 @@ void Window::Download()
     musicList->btnDownload->setText("Download");
     QMessageBox::warning(this, "OK", "Download is end");
 }
+
+void Window::ChooseSaveDirectory()
+{
+    QString dirname = QFileDialog::getExistingDirectory(this, "Select Save Directory", QDir::currentPath());
+    std::cout<<dirname.toStdString()<<std::endl;
+
+    std::string settingsFileName = "settings.json";
+    std::string settingsFile = FileOperations::readFromFile(settingsFileName);
+    Json::Value root;
+    Json::Reader reader;
+
+    bool bjsonparse = reader.parse(settingsFile, root);
+
+    root["settings"]["save_path"] = dirname.toStdString();
+
+    std::string path = root["settings"].get("save_path", "./").asString();
+
+    std::string settings = Json::StyledWriter().write(root);
+
+    FileOperations::writeToFile(settingsFileName, settings);
+    vk->setSaveFileDirectory(path);
+}
+
+void Window::Exit()
+{
+    exit(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

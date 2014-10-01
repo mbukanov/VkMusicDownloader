@@ -4,6 +4,7 @@
 #include <boost/regex.hpp>
 #include <algorithm>
 #include <list>
+#include "fileoperations.h"
 #include "FileDownloader.h"
 
 class VKapi
@@ -77,6 +78,8 @@ public:
 
 	Errors getLastError();
 
+    void setSaveFileDirectory(std::string directory);
+    std::string getSaveFileDirectory() const;
 
 	static int writer(char *data, size_t size, size_t nmemb, std::string *buffer);
 	static size_t DownloadedFileWriter(void *ptr, size_t size, size_t nmemb, FILE *stream);
@@ -106,6 +109,7 @@ private:
 	std::string _ruri;
 	std::string _display;
 	CURL* curl;
+    std::string _saveFileDirectory;
 
 	Errors err;
 

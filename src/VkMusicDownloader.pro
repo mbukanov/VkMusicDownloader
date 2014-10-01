@@ -10,11 +10,13 @@ SOURCES += \
     authwidget.cpp \
     vkapi.cpp \
     FileDownloader.cpp \
-    musiclist.cpp
+    musiclist.cpp \
+    fileoperations.cpp
 
 HEADERS += \
     window.h \
     authwidget.h \
     vkapi.h \
     FileDownloader.h \
-    musiclist.h
+    musiclist.h \
+    fileoperations.h
