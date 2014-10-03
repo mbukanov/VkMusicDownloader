@@ -4,14 +4,34 @@ VKapi::VKapi()
 {
 	err.b = false;
 	err.msg = "";
-    std::string temp_settingsFile = "settings.json";
-    std::string settingsFile = FileOperations::readFromFile(temp_settingsFile);
+
+    /*
+     *  Read settings file(json)
+     */
+    /*
+    std::string SettingsFileName = "settings.json";
+    std::string settingsFileBuffer = FileOperations::readFromFile(SettingsFileName);
     Json::Value root;
     Json::Reader reader;
-
-    bool bjsonparse = reader.parse(settingsFile, root);
+    reader.parse(settingsFileBuffer, root);
+*/
+    /*
+     *  Read and set path where the file will be saved
+     */
+    /*
     std::string path = root["settings"].get("save_path", "./").asString();
     setSaveFileDirectory(path);
+*/
+    /*
+     * Set flag to (not) replace existing files
+     */
+    /*
+    _replaceExistingMusicFiles = root["settings"].get("replace_existing_files", false).asBool();
+    if(!ReplaceFiles())
+    {
+        setFilesInDirectory(do_ls(getSaveFileDirectory().c_str()));
+    }
+    */
 }
 
 VKapi::~VKapi()
@@ -154,16 +174,6 @@ std::string VKapi::getHashFromHeaders(std::string headers)
     return result;
 }
 
-void VKapi::sendRequest(std::string& buff)
-{
-	// todo
-}
-
-std::string VKapi::recvRequest() const
-{
-	// todo
-}
-
 int VKapi::writer(char *data, size_t size, size_t nmemb, std::string *buffer)
 {
 	int result = 0;
@@ -182,11 +192,18 @@ size_t VKapi::DownloadedFileWriter(void *ptr, size_t size, size_t nmemb, FILE *s
 	return written;
 }
 
-/*
-	Authorization()
+void VKapi::setReplaceFiles(bool replace)
+{
+    _replaceExistingMusicFiles = replace;
+    if(_filesInDirectory.empty())
+        setFilesInDirectory();
+}
 
-	Send request with Login and Password to authorization page
-	Request is page with HTML: Grant access if auth success, login page if auth failure
+/*
+    Authorization()
+
+    Send request with Login and Password to authorization page
+    Request is page with HTML: Grant access if auth success, login page if auth failure
 */
 void VKapi::Authorization()
 {
@@ -349,18 +366,30 @@ void VKapi::curlCheckError(CURL* curl, int result, char* errorBuffer)
 	}
 }
 
+void VKapi::setFilesInDirectory()
+{
+    _filesInDirectory.clear();
+    if(!ReplaceFiles())
+    {
+        std::multimap<std::string, std::string> files = do_ls(getSaveFileDirectory().c_str());
+        std::for_each(files.begin(), files.end(), [this](std::pair<std::string, std::string> file_pair){
+            _filesInDirectory.insert(file_pair.second);
+        });
+    }
+}
+
 void VKapi::parseMusic(std::string json)
 {
-	Json::Value root;
-	Json::Reader reader;
+    Json::Value root;
+    Json::Reader reader;
 
-	bool parsingSucceful = reader.parse(json, root);
+    bool parsingSucceful = reader.parse(json, root);
 
-	for(Json::Value::iterator it = root["response"].begin(); it != root["response"].end(); it++)
-	{
-		Song s = { (*it)["artist"].asString(), (*it)["title"].asString(), (*it)["url"].asString() };
-		_jsonMusic.push_back(s);
-	}
+    for(Json::Value::iterator it = root["response"].begin(); it != root["response"].end(); it++)
+    {
+        Song s = { (*it)["artist"].asString(), (*it)["title"].asString(), (*it)["url"].asString() };
+        _jsonMusic.push_back(s);
+    }
 }
 
 VKapi::Musics VKapi::getMusic() const
@@ -387,7 +416,24 @@ bool VKapi::DownloadFile(std::string url, std::string filename)
 {
 	downloader.setUrl(url);
     filename = EscapeSpecChars(filename);
+
+    if(!ReplaceFiles()) // Not replace existing files?
+    {
+        std::set<std::string>::iterator it = std::find_if(_filesInDirectory.begin(), _filesInDirectory.end(), [filename](std::string file){
+                return file == filename;
+        });
+
+        // find ?
+        if(it != _filesInDirectory.end()) // yes, find.
+        {
+            std::cout<<"File "<<(*it)<<" existing"<<std::endl;
+            return false;
+        }else{
+            std::cout<<"file not existing"<<std::endl;
+        }
+    }
     filename = getSaveFileDirectory() + filename; // firectory + filename;
+
 	downloader.setFilename(filename);
 	return downloader.Download();
 }

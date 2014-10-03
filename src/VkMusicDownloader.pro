@@ -1,6 +1,6 @@
 QT += gui widgets
 
-LIBS += -L"$$_PRO_FILE_PWD_" -lcurl -lboost_regex -ljsoncpp
+LIBS += -L"$$_PRO_FILE_PWD_" -lcurl -lboost_regex -ljsoncpp -lm -lcrypto
 
 QMAKE_CXXFLAGS += -std=c++11
 
@@ -11,7 +11,8 @@ SOURCES += \
     vkapi.cpp \
     FileDownloader.cpp \
     musiclist.cpp \
-    fileoperations.cpp
+    fileoperations.cpp \
+    settingswidget.cpp
 
 HEADERS += \
     window.h \
@@ -19,4 +20,6 @@ HEADERS += \
     vkapi.h \
     FileDownloader.h \
     musiclist.h \
-    fileoperations.h
+    fileoperations.h \
+    OS.h \
+    settingswidget.h

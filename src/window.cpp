@@ -6,7 +6,9 @@ Window::Window(QWidget *parent) :
     vk = new VKapi;
     this->setLayout(new QVBoxLayout);
     authWidget = new AuthWidget(this);
+    settingsWidget = new SettingsWidget(vk, this);
     this->layout()->addWidget(authWidget);
+    this->setFixedSize(300, 400);
     createMenu();
     connect(authWidget->btnLogin, SIGNAL(clicked()), this, SLOT(Authorization()));
 }
@@ -15,10 +17,10 @@ void Window::createMenu()
 {
     QMenuBar * menuBar = new QMenuBar(this);
     QMenu * menuFile = menuBar->addMenu("File");
-    QAction * actSavePath   = menuFile->addAction("Set save path");
+    QAction * actSettings   = menuFile->addAction("Settings");
     QAction * actExit       = menuFile->addAction("Exit");
 
-    QObject::connect(actSavePath, SIGNAL(triggered()), this, SLOT(ChooseSaveDirectory()));
+    QObject::connect(actSettings, SIGNAL(triggered()), this, SLOT(OpenSettings()));
     QObject::connect(actExit, SIGNAL(triggered()), this, SLOT(Exit()));
 
     this->layout()->setMenuBar(menuBar);
@@ -73,7 +75,6 @@ void Window::Authorization()
 void Window::Download()
 {
     if(vk == NULL) return;
-    musicList->btnDownload->setText("Download process...");
 
     for(int i = 0; i < musicList->musicList->count(); ++i)
     {
@@ -86,6 +87,11 @@ void Window::Download()
     }
     musicList->btnDownload->setText("Download");
     QMessageBox::warning(this, "OK", "Download is end");
+}
+
+void Window::OpenSettings()
+{
+    settingsWidget->show();
 }
 
 void Window::ChooseSaveDirectory()

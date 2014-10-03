@@ -16,7 +16,7 @@ class AuthWidget : public QWidget
     Q_OBJECT
 public:
     explicit AuthWidget(QWidget *parent = 0);
-    friend Window;
+    friend class Window;
 
 private:
     QHBoxLayout * layLogin = NULL;

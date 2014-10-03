@@ -17,7 +17,9 @@
 #include <QMessageBox>
 #include <jsoncpp/include/json/writer.h>
 #include <fstream>
+#include "settingswidget.h"
 #include "vkapi.h"
+#include <QMovie>
 
 class Window : public QDialog
 {
@@ -26,6 +28,8 @@ public:
     explicit Window(QWidget *parent = 0);
     AuthWidget * authWidget = NULL;
     MusicList * musicList = NULL;
+    SettingsWidget * settingsWidget = NULL;
+
 
     void createMenu();
 
@@ -36,6 +40,8 @@ signals:
 public slots:
     void Authorization();
     void Download();
+
+    void OpenSettings();
 
     void ChooseSaveDirectory();
     void Exit();

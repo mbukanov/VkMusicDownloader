@@ -8,11 +8,12 @@ AuthWidget::AuthWidget(QWidget *parent) :
     layPassword = new QHBoxLayout(this);
     layButtons = new QHBoxLayout(this);
 
-    lblLogin = new QLabel("Login: ", this);
-    lblPassword = new QLabel("Password: ", this);
+    lblLogin = new QLabel("Login: ", this);     // Label "Login"
+    lblPassword = new QLabel("Password: ", this);   // Label "Password"
 
-    leLogin = new QLineEdit(this);
-    lePassword = new QLineEdit(this);
+    leLogin = new QLineEdit(this);      // Line Edit for Login
+    lePassword = new QLineEdit(this);   // Line Edit for Password
+    lePassword->setEchoMode(QLineEdit::Password); // for "Password: **********"
 
     btnLogin = new QPushButton("Login", this);
 

@@ -1,9 +1,13 @@
+#ifndef VKAPI_H
+#define VKAPI_H
+
 #include <vector>
 #include "jsoncpp/include/json/json.h" // -ljsoncpp -L. (include libjsoncpp.a)
 #include <curl/curl.h>
 #include <boost/regex.hpp>
 #include <algorithm>
 #include <list>
+#include "OS.h"
 #include "fileoperations.h"
 #include "FileDownloader.h"
 
@@ -84,12 +88,12 @@ public:
 	static int writer(char *data, size_t size, size_t nmemb, std::string *buffer);
 	static size_t DownloadedFileWriter(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
+    bool ReplaceFiles() const { return _replaceExistingMusicFiles; }
+    void setReplaceFiles(bool replace);
 
 	void curlCheckError(CURL* curl, int result, char* errorBuffer);
 
-protected:
-	void sendRequest(std::string& buff);
-	std::string recvRequest() const;
+    void setFilesInDirectory();
 
 
 private:
@@ -110,9 +114,13 @@ private:
 	std::string _display;
 	CURL* curl;
     std::string _saveFileDirectory;
-
+    bool _replaceExistingMusicFiles;
 	Errors err;
+
+    std::set<std::string> _filesInDirectory; // for (not) replace downloaded files
 
 	Musics _jsonMusic;
 
 };
+
+#endif
