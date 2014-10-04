@@ -2,6 +2,7 @@
 #define FILEOPERATIONS_H
 
 #include <fstream>
+#include <string>
 
 class FileOperations
 {
@@ -12,7 +13,7 @@ public:
     static std::string readFromFile(std::string &filename)
     {
         std::string result = "";
-        std::ifstream myFile(filename);
+        std::ifstream myFile(filename.c_str());
         if(myFile.is_open())
         {
             std::string tempstr;
@@ -23,7 +24,7 @@ public:
         }else
         {
             // Create File
-            std::ofstream createFile(filename);
+            std::ofstream createFile(filename.c_str());
             createFile.close();
         }
         myFile.close();
@@ -33,7 +34,7 @@ public:
 
     static void writeToFile(std::string &filename, std::string& text)
     {
-        std::ofstream myFile(filename);
+        std::ofstream myFile(filename.c_str());
         myFile << text;
         myFile.close();
     }

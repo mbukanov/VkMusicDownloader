@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <map>
 #include <string>
+#include <cstring>
 
 inline bool file_exists(const std::string& name)
 {

@@ -11,15 +11,13 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QString>
-#include <jsoncpp/include/json/json.h>
-#include "fileoperations.h"
-#include "vkapi.h"
+#include "settings.h"
 
 class SettingsWidget : public QDialog
 {
     Q_OBJECT
 public:
-    explicit SettingsWidget(VKapi* vk, QWidget *parent = 0);
+    explicit SettingsWidget(QWidget *parent = 0);
 
     QLineEdit * leSaveMusicPath = NULL; // path to save music
     QPushButton * btnBrowserPath = NULL;
@@ -36,7 +34,6 @@ public:
     void SetCurrentSettings();
 
 private:
-    VKapi* _vk;
 
 signals:
 

@@ -18,8 +18,12 @@
 #include <jsoncpp/include/json/writer.h>
 #include <fstream>
 #include "settingswidget.h"
-#include "vkapi.h"
+#include "vkmusic.h"
+#include "musicdownloader.h"
+#include <QThread>
+#include <QTextEdit>
 #include <QMovie>
+#include <QApplication>
 
 class Window : public QDialog
 {
@@ -30,20 +34,22 @@ public:
     MusicList * musicList = NULL;
     SettingsWidget * settingsWidget = NULL;
 
-
     void createMenu();
 
 private:
-    VKapi *vk = NULL;
+    VKMusic *vk;
+    MusicDownloader * downloader;
+    QThread *thread;
+
 signals:
 
 public slots:
     void Authorization();
     void Download();
+    void DownloadEnd();
 
     void OpenSettings();
 
-    void ChooseSaveDirectory();
     void Exit();
 
 };

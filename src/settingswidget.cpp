@@ -1,16 +1,8 @@
 #include "settingswidget.h"
 
-SettingsWidget::SettingsWidget(VKapi* vk, QWidget *parent) :
+SettingsWidget::SettingsWidget(QWidget *parent) :
     QDialog(parent)
 {
-    if(vk == NULL)
-    {
-        assert("VKapi is NULL!");
-        std::cout<<"VKapi is NULL!"<<std::endl;
-        exit(0);
-    }
-
-    _vk = vk;
     this->setLayout(new QVBoxLayout);
 
     CreateSaveMusicBox();
@@ -59,27 +51,17 @@ void SettingsWidget::CreateReplaceMusicBox()
 
 void SettingsWidget::SetCurrentSettings()
 {
-    std::string SettingsFileName = "settings.json";
-    std::string settingsFileBuffer = FileOperations::readFromFile(SettingsFileName);
-    Json::Value root;
-    Json::Reader reader;
-    reader.parse(settingsFileBuffer, root);
-
     /*
      *  Read and set path where the file will be saved
      */
-    std::string path = root["settings"].get("save_path", "./").asString();
+    std::string path = Settings::init()->getJson()["settings"].get("save_path", "./").asString();
     leSaveMusicPath->setText(QString::fromStdString(path));
 
     /*
      * Set flag to (not) replace existing files
      */
-    bool replaceMusic = root["settings"].get("replace_existing_files", false).asBool();
+    bool replaceMusic = Settings::init()->getJson()["settings"].get("replace_existing_files", false).asBool();
     chbReplaceMusic->setChecked(replaceMusic);
-
-    _vk->setSaveFileDirectory(path);
-    _vk->setReplaceFiles(replaceMusic);
-    _vk->setFilesInDirectory();
 }
 
 void SettingsWidget::SetSaveMusicPath()
@@ -90,23 +72,29 @@ void SettingsWidget::SetSaveMusicPath()
 
 void SettingsWidget::BtnSave()
 {
+    // settings
     std::string save_path = leSaveMusicPath->text().toStdString();
     bool replace_existing_files = chbReplaceMusic->isChecked();
 
-    std::string settingsFileName = "settings.json";
-    Json::Value root;
-
-    root["settings"]["save_path"] = save_path;
-    root["settings"]["replace_existing_files"] = replace_existing_files;
-
-    std::string settings = Json::StyledWriter().write(root);
-    FileOperations::writeToFile(settingsFileName, settings);
-
-    _vk->setSaveFileDirectory(save_path);
-    _vk->setReplaceFiles(replace_existing_files);
+    Settings::init()->getJson()["settings"]["save_path"] = save_path;
+    Settings::init()->getJson()["settings"]["replace_existing_files"] = replace_existing_files;
+    Settings::init()->save();
 
     this->close();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

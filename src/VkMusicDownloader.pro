@@ -8,18 +8,23 @@ SOURCES += \
     main.cpp \
     window.cpp \
     authwidget.cpp \
-    vkapi.cpp \
     FileDownloader.cpp \
     musiclist.cpp \
-    fileoperations.cpp \
-    settingswidget.cpp
+    settingswidget.cpp \
+    vkmusic.cpp \
+    vkbase.cpp \
+    settings.cpp \
+    musicdownloader.cpp
 
 HEADERS += \
     window.h \
     authwidget.h \
-    vkapi.h \
     FileDownloader.h \
     musiclist.h \
     fileoperations.h \
     OS.h \
-    settingswidget.h
+    settingswidget.h \
+    vkmusic.h \
+    vkbase.h \
+    settings.h \
+    musicdownloader.h

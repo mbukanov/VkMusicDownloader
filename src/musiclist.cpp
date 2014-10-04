@@ -5,6 +5,16 @@ MusicList::MusicList(QWidget *parent) :
 {
     this->setLayout(new QVBoxLayout);
 
+    QHBoxLayout * layLoader = new QHBoxLayout();
+    loaderLabel = new QLabel("", this);
+    movieLabel = new QLabel(this);
+    loaderMovie = new QMovie("loader.gif");
+    movieLabel->setMovie(loaderMovie);
+    layLoader->addWidget(loaderLabel);
+    layLoader->addWidget(movieLabel);
+    this->layout()->addItem(layLoader);
+
+
     btnCheckAll = new QPushButton("Check All", this);
     btnUncheckAll = new QPushButton("Uncheck All", this);
 
@@ -21,6 +31,22 @@ MusicList::MusicList(QWidget *parent) :
 
     QObject::connect(btnCheckAll, SIGNAL(clicked()), this, SLOT(CheckAll()));
     QObject::connect(btnUncheckAll, SIGNAL(clicked()), this, SLOT(UncheckAll()));
+}
+
+void MusicList::StartLoadAnim()
+{
+    loaderLabel->setText("Downloading...");
+    movieLabel->show();
+    loaderMovie->start();
+    btnDownload->setEnabled(false);
+}
+
+void MusicList::StopLoadAnim()
+{
+    loaderLabel->setText("");
+    loaderMovie->stop();
+    movieLabel->hide();
+    btnDownload->setEnabled(true);
 }
 
 void MusicList::CheckAll()

@@ -8,6 +8,8 @@
 #include <QHBoxLayout>
 #include <QString>
 #include <QPushButton>
+#include <QLabel>
+#include <QMovie>
 
 class MusicList : public QWidget
 {
@@ -15,10 +17,18 @@ class MusicList : public QWidget
 public:
     explicit MusicList(QWidget *parent = 0);
     friend class Window;
+
+    QLabel *loaderLabel;
+    QMovie *loaderMovie;
+    QLabel *movieLabel;
+
     QListWidget * musicList;
     QPushButton * btnDownload;
     QPushButton * btnCheckAll;
     QPushButton * btnUncheckAll;
+
+    void StartLoadAnim();
+    void StopLoadAnim();
 
 signals:
 
