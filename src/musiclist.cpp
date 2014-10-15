@@ -9,6 +9,7 @@ MusicList::MusicList(QWidget *parent) :
     loaderLabel = new QLabel("", this);
     movieLabel = new QLabel(this);
     loaderMovie = new QMovie("loader.gif");
+    lblDownloadMusicTitle = new QLabel("", this);
     movieLabel->setMovie(loaderMovie);
     layLoader->addWidget(loaderLabel);
     layLoader->addWidget(movieLabel);
@@ -25,6 +26,7 @@ MusicList::MusicList(QWidget *parent) :
     btnDownload = new QPushButton("Download", this);
     musicList = new QListWidget(this);
 
+    this->layout()->addWidget(lblDownloadMusicTitle);
     this->layout()->addItem(layChecks);
     this->layout()->addWidget(musicList);
     this->layout()->addWidget(btnDownload);

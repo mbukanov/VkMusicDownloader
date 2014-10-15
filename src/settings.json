@@ -1,6 +1,6 @@
 {
    "settings" : {
       "replace_existing_files" : false,
-      "save_path" : "./"
+      "save_path" : "/home/qeed/programming/VkMusicDownloader/"
    }
 }

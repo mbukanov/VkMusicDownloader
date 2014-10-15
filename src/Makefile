@@ -18,7 +18,7 @@ CXXFLAGS      = -pipe -std=c++11 -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/usr/lib/i386-linux-gnu/qt5/mkspecs/linux-g++ -I. -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -I.
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -L/home/qeed/programming/VkMusicDownloader/src -lcurl -lboost_regex -ljsoncpp -lQt5Widgets -L/usr/lib/i386-linux-gnu -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/home/qeed/programming/VkMusicDownloader/src -lcurl -lboost_regex -ljsoncpp -lm -lcrypto -lQt5Widgets -L/usr/lib/i386-linux-gnu -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/i386-linux-gnu/qt5/bin/qmake
@@ -48,20 +48,32 @@ OBJECTS_DIR   = ./
 SOURCES       = main.cpp \
 		window.cpp \
 		authwidget.cpp \
-		vkapi.cpp \
 		FileDownloader.cpp \
-		musiclist.cpp moc_window.cpp \
+		musiclist.cpp \
+		settingswidget.cpp \
+		vkmusic.cpp \
+		vkbase.cpp \
+		settings.cpp \
+		musicdownloader.cpp moc_window.cpp \
 		moc_authwidget.cpp \
-		moc_musiclist.cpp
+		moc_musiclist.cpp \
+		moc_settingswidget.cpp \
+		moc_musicdownloader.cpp
 OBJECTS       = main.o \
 		window.o \
 		authwidget.o \
-		vkapi.o \
 		FileDownloader.o \
 		musiclist.o \
+		settingswidget.o \
+		vkmusic.o \
+		vkbase.o \
+		settings.o \
+		musicdownloader.o \
 		moc_window.o \
 		moc_authwidget.o \
-		moc_musiclist.o
+		moc_musiclist.o \
+		moc_settingswidget.o \
+		moc_musicdownloader.o
 DIST          = /usr/lib/i386-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/i386-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/i386-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -310,7 +322,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/VkMusicDownloader1.0.0 || mkdir -p .tmp/VkMusicDownloader1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/VkMusicDownloader1.0.0/ && $(COPY_FILE) --parents window.h authwidget.h vkapi.h FileDownloader.h musiclist.h .tmp/VkMusicDownloader1.0.0/ && $(COPY_FILE) --parents main.cpp window.cpp authwidget.cpp vkapi.cpp FileDownloader.cpp musiclist.cpp .tmp/VkMusicDownloader1.0.0/ && (cd `dirname .tmp/VkMusicDownloader1.0.0` && $(TAR) VkMusicDownloader1.0.0.tar VkMusicDownloader1.0.0 && $(COMPRESS) VkMusicDownloader1.0.0.tar) && $(MOVE) `dirname .tmp/VkMusicDownloader1.0.0`/VkMusicDownloader1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/VkMusicDownloader1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/VkMusicDownloader1.0.0/ && $(COPY_FILE) --parents window.h authwidget.h FileDownloader.h musiclist.h fileoperations.h OS.h settingswidget.h vkmusic.h vkbase.h settings.h musicdownloader.h .tmp/VkMusicDownloader1.0.0/ && $(COPY_FILE) --parents main.cpp window.cpp authwidget.cpp FileDownloader.cpp musiclist.cpp settingswidget.cpp vkmusic.cpp vkbase.cpp settings.cpp musicdownloader.cpp .tmp/VkMusicDownloader1.0.0/ && (cd `dirname .tmp/VkMusicDownloader1.0.0` && $(TAR) VkMusicDownloader1.0.0.tar VkMusicDownloader1.0.0 && $(COMPRESS) VkMusicDownloader1.0.0.tar) && $(MOVE) `dirname .tmp/VkMusicDownloader1.0.0`/VkMusicDownloader1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/VkMusicDownloader1.0.0
 
 
 clean:compiler_clean 
@@ -333,9 +345,9 @@ check: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all: moc_window.cpp moc_authwidget.cpp moc_musiclist.cpp
+compiler_moc_header_make_all: moc_window.cpp moc_authwidget.cpp moc_musiclist.cpp moc_settingswidget.cpp moc_musicdownloader.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_window.cpp moc_authwidget.cpp moc_musiclist.cpp
+	-$(DEL_FILE) moc_window.cpp moc_authwidget.cpp moc_musiclist.cpp moc_settingswidget.cpp moc_musicdownloader.cpp
 moc_window.cpp: /usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/qdialog.h \
 		/usr/include/qt5/QtWidgets/qwidget.h \
@@ -464,6 +476,17 @@ moc_window.cpp: /usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
 		/usr/include/qt5/QtWidgets/QHBoxLayout \
+		/usr/include/qt5/QtWidgets/QMenu \
+		/usr/include/qt5/QtWidgets/qmenu.h \
+		/usr/include/qt5/QtWidgets/qaction.h \
+		/usr/include/qt5/QtWidgets/qactiongroup.h \
+		/usr/include/qt5/QtWidgets/QFileDialog \
+		/usr/include/qt5/QtWidgets/qfiledialog.h \
+		/usr/include/qt5/QtCore/qdir.h \
+		/usr/include/qt5/QtCore/qfileinfo.h \
+		/usr/include/qt5/QtWidgets/QAction \
+		/usr/include/qt5/QtWidgets/QMenuBar \
+		/usr/include/qt5/QtWidgets/qmenubar.h \
 		authwidget.h \
 		/usr/include/qt5/QtWidgets/QWidget \
 		musiclist.h \
@@ -487,18 +510,50 @@ moc_window.cpp: /usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/qrubberband.h \
 		/usr/include/qt5/QtWidgets/QListWidgetItem \
 		/usr/include/qt5/QtCore/QString \
+		/usr/include/qt5/QtGui/QMovie \
+		/usr/include/qt5/QtGui/qmovie.h \
+		/usr/include/qt5/QtGui/qimagereader.h \
+		/usr/include/qt5/QtGui/qimageiohandler.h \
+		/usr/include/qt5/QtCore/qplugin.h \
+		/usr/include/qt5/QtCore/qpointer.h \
+		/usr/include/qt5/QtCore/qjsonobject.h \
+		/usr/include/qt5/QtCore/qjsonvalue.h \
+		/usr/include/qt5/QtCore/qfactoryinterface.h \
 		/usr/include/qt5/QtWidgets/QMessageBox \
 		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		vkapi.h \
-		jsoncpp/include/json/json.h \
-		jsoncpp/include/json/autolink.h \
-		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/writer.h \
 		jsoncpp/include/json/value.h \
 		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/config.h \
+		settingswidget.h \
+		/usr/include/qt5/QtWidgets/QCheckBox \
+		/usr/include/qt5/QtWidgets/qcheckbox.h \
+		/usr/include/qt5/QtWidgets/QGroupBox \
+		/usr/include/qt5/QtWidgets/qgroupbox.h \
+		settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
 		jsoncpp/include/json/reader.h \
 		jsoncpp/include/json/features.h \
-		jsoncpp/include/json/writer.h \
+		fileoperations.h \
+		vkmusic.h \
+		vkbase.h \
+		musicdownloader.h \
+		/usr/include/qt5/QtCore/QObject \
 		FileDownloader.h \
+		OS.h \
+		/usr/include/qt5/QtCore/QThread \
+		/usr/include/qt5/QtCore/qthread.h \
+		/usr/include/qt5/QtWidgets/QTextEdit \
+		/usr/include/qt5/QtWidgets/qtextedit.h \
+		/usr/include/qt5/QtGui/qtextdocument.h \
+		/usr/include/qt5/QtWidgets/QApplication \
+		/usr/include/qt5/QtWidgets/qapplication.h \
+		/usr/include/qt5/QtCore/qcoreapplication.h \
+		/usr/include/qt5/QtCore/qeventloop.h \
+		/usr/include/qt5/QtWidgets/qdesktopwidget.h \
+		/usr/include/qt5/QtGui/qguiapplication.h \
+		/usr/include/qt5/QtGui/qinputmethod.h \
 		window.h
 	/usr/lib/i386-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/i386-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/i686-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed -I/usr/include/i386-linux-gnu -I/usr/include window.h -o moc_window.cpp
 
@@ -771,8 +826,240 @@ moc_musiclist.cpp: /usr/include/qt5/QtWidgets/QWidget \
 		/usr/include/qt5/QtWidgets/QPushButton \
 		/usr/include/qt5/QtWidgets/qpushbutton.h \
 		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtGui/QMovie \
+		/usr/include/qt5/QtGui/qmovie.h \
+		/usr/include/qt5/QtGui/qimagereader.h \
+		/usr/include/qt5/QtGui/qimageiohandler.h \
+		/usr/include/qt5/QtCore/qplugin.h \
+		/usr/include/qt5/QtCore/qpointer.h \
+		/usr/include/qt5/QtCore/qjsonobject.h \
+		/usr/include/qt5/QtCore/qjsonvalue.h \
+		/usr/include/qt5/QtCore/qfactoryinterface.h \
 		musiclist.h
 	/usr/lib/i386-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/i386-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/i686-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed -I/usr/include/i386-linux-gnu -I/usr/include musiclist.h -o moc_musiclist.cpp
+
+moc_settingswidget.cpp: /usr/include/qt5/QtWidgets/QDialog \
+		/usr/include/qt5/QtWidgets/qdialog.h \
+		/usr/include/qt5/QtWidgets/qwidget.h \
+		/usr/include/qt5/QtGui/qwindowdefs.h \
+		/usr/include/qt5/QtCore/qglobal.h \
+		/usr/include/qt5/QtCore/qconfig.h \
+		/usr/include/qt5/QtCore/qfeatures.h \
+		/usr/include/qt5/QtCore/qsystemdetection.h \
+		/usr/include/qt5/QtCore/qprocessordetection.h \
+		/usr/include/qt5/QtCore/qcompilerdetection.h \
+		/usr/include/qt5/QtCore/qglobalstatic.h \
+		/usr/include/qt5/QtCore/qatomic.h \
+		/usr/include/qt5/QtCore/qbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt5/QtCore/qgenericatomic.h \
+		/usr/include/qt5/QtCore/qatomic_msvc.h \
+		/usr/include/qt5/QtCore/qatomic_integrity.h \
+		/usr/include/qt5/QtCore/qoldbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_vxworks.h \
+		/usr/include/qt5/QtCore/qatomic_power.h \
+		/usr/include/qt5/QtCore/qatomic_alpha.h \
+		/usr/include/qt5/QtCore/qatomic_armv7.h \
+		/usr/include/qt5/QtCore/qatomic_armv6.h \
+		/usr/include/qt5/QtCore/qatomic_armv5.h \
+		/usr/include/qt5/QtCore/qatomic_bfin.h \
+		/usr/include/qt5/QtCore/qatomic_ia64.h \
+		/usr/include/qt5/QtCore/qatomic_mips.h \
+		/usr/include/qt5/QtCore/qatomic_s390.h \
+		/usr/include/qt5/QtCore/qatomic_sh4a.h \
+		/usr/include/qt5/QtCore/qatomic_sparc.h \
+		/usr/include/qt5/QtCore/qatomic_gcc.h \
+		/usr/include/qt5/QtCore/qatomic_x86.h \
+		/usr/include/qt5/QtCore/qatomic_cxx11.h \
+		/usr/include/qt5/QtCore/qatomic_unix.h \
+		/usr/include/qt5/QtCore/qmutex.h \
+		/usr/include/qt5/QtCore/qlogging.h \
+		/usr/include/qt5/QtCore/qflags.h \
+		/usr/include/qt5/QtCore/qtypeinfo.h \
+		/usr/include/qt5/QtCore/qtypetraits.h \
+		/usr/include/qt5/QtCore/qsysinfo.h \
+		/usr/include/qt5/QtCore/qobjectdefs.h \
+		/usr/include/qt5/QtCore/qnamespace.h \
+		/usr/include/qt5/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt5/QtGui/qwindowdefs_win.h \
+		/usr/include/qt5/QtCore/qobject.h \
+		/usr/include/qt5/QtCore/qstring.h \
+		/usr/include/qt5/QtCore/qchar.h \
+		/usr/include/qt5/QtCore/qbytearray.h \
+		/usr/include/qt5/QtCore/qrefcount.h \
+		/usr/include/qt5/QtCore/qarraydata.h \
+		/usr/include/qt5/QtCore/qstringbuilder.h \
+		/usr/include/qt5/QtCore/qlist.h \
+		/usr/include/qt5/QtCore/qalgorithms.h \
+		/usr/include/qt5/QtCore/qiterator.h \
+		/usr/include/qt5/QtCore/qcoreevent.h \
+		/usr/include/qt5/QtCore/qscopedpointer.h \
+		/usr/include/qt5/QtCore/qmetatype.h \
+		/usr/include/qt5/QtCore/qvarlengtharray.h \
+		/usr/include/qt5/QtCore/qcontainerfwd.h \
+		/usr/include/qt5/QtCore/qisenum.h \
+		/usr/include/qt5/QtCore/qobject_impl.h \
+		/usr/include/qt5/QtCore/qmargins.h \
+		/usr/include/qt5/QtCore/qrect.h \
+		/usr/include/qt5/QtCore/qsize.h \
+		/usr/include/qt5/QtCore/qpoint.h \
+		/usr/include/qt5/QtGui/qpaintdevice.h \
+		/usr/include/qt5/QtGui/qpalette.h \
+		/usr/include/qt5/QtGui/qcolor.h \
+		/usr/include/qt5/QtGui/qrgb.h \
+		/usr/include/qt5/QtCore/qstringlist.h \
+		/usr/include/qt5/QtCore/qdatastream.h \
+		/usr/include/qt5/QtCore/qiodevice.h \
+		/usr/include/qt5/QtCore/qpair.h \
+		/usr/include/qt5/QtCore/qregexp.h \
+		/usr/include/qt5/QtCore/qstringmatcher.h \
+		/usr/include/qt5/QtGui/qbrush.h \
+		/usr/include/qt5/QtCore/qvector.h \
+		/usr/include/qt5/QtGui/qmatrix.h \
+		/usr/include/qt5/QtGui/qpolygon.h \
+		/usr/include/qt5/QtGui/qregion.h \
+		/usr/include/qt5/QtCore/qline.h \
+		/usr/include/qt5/QtGui/qtransform.h \
+		/usr/include/qt5/QtGui/qpainterpath.h \
+		/usr/include/qt5/QtGui/qimage.h \
+		/usr/include/qt5/QtGui/qpixmap.h \
+		/usr/include/qt5/QtCore/qsharedpointer.h \
+		/usr/include/qt5/QtCore/qshareddata.h \
+		/usr/include/qt5/QtCore/qsharedpointer_impl.h \
+		/usr/include/qt5/QtCore/qhash.h \
+		/usr/include/qt5/QtGui/qfont.h \
+		/usr/include/qt5/QtGui/qfontmetrics.h \
+		/usr/include/qt5/QtGui/qfontinfo.h \
+		/usr/include/qt5/QtWidgets/qsizepolicy.h \
+		/usr/include/qt5/QtGui/qcursor.h \
+		/usr/include/qt5/QtGui/qkeysequence.h \
+		/usr/include/qt5/QtGui/qevent.h \
+		/usr/include/qt5/QtCore/qvariant.h \
+		/usr/include/qt5/QtCore/qmap.h \
+		/usr/include/qt5/QtCore/qdebug.h \
+		/usr/include/qt5/QtCore/qtextstream.h \
+		/usr/include/qt5/QtCore/qlocale.h \
+		/usr/include/qt5/QtCore/qset.h \
+		/usr/include/qt5/QtCore/qcontiguouscache.h \
+		/usr/include/qt5/QtCore/qurl.h \
+		/usr/include/qt5/QtCore/qurlquery.h \
+		/usr/include/qt5/QtCore/qfile.h \
+		/usr/include/qt5/QtCore/qfiledevice.h \
+		/usr/include/qt5/QtGui/qvector2d.h \
+		/usr/include/qt5/QtGui/qtouchdevice.h \
+		/usr/include/qt5/QtWidgets/QVBoxLayout \
+		/usr/include/qt5/QtWidgets/qboxlayout.h \
+		/usr/include/qt5/QtWidgets/qlayout.h \
+		/usr/include/qt5/QtWidgets/qlayoutitem.h \
+		/usr/include/qt5/QtWidgets/qgridlayout.h \
+		/usr/include/qt5/QtWidgets/QHBoxLayout \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtWidgets/qframe.h \
+		/usr/include/qt5/QtWidgets/QLineEdit \
+		/usr/include/qt5/QtWidgets/qlineedit.h \
+		/usr/include/qt5/QtGui/qtextcursor.h \
+		/usr/include/qt5/QtGui/qtextformat.h \
+		/usr/include/qt5/QtGui/qpen.h \
+		/usr/include/qt5/QtGui/qtextoption.h \
+		/usr/include/qt5/QtWidgets/QCheckBox \
+		/usr/include/qt5/QtWidgets/qcheckbox.h \
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtGui/qicon.h \
+		/usr/include/qt5/QtWidgets/QFileDialog \
+		/usr/include/qt5/QtWidgets/qfiledialog.h \
+		/usr/include/qt5/QtCore/qdir.h \
+		/usr/include/qt5/QtCore/qfileinfo.h \
+		/usr/include/qt5/QtWidgets/QGroupBox \
+		/usr/include/qt5/QtWidgets/qgroupbox.h \
+		/usr/include/qt5/QtWidgets/QPushButton \
+		/usr/include/qt5/QtWidgets/qpushbutton.h \
+		/usr/include/qt5/QtCore/QString \
+		settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h \
+		fileoperations.h \
+		settingswidget.h
+	/usr/lib/i386-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/i386-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/i686-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed -I/usr/include/i386-linux-gnu -I/usr/include settingswidget.h -o moc_settingswidget.cpp
+
+moc_musicdownloader.cpp: /usr/include/qt5/QtCore/QObject \
+		/usr/include/qt5/QtCore/qobject.h \
+		/usr/include/qt5/QtCore/qobjectdefs.h \
+		/usr/include/qt5/QtCore/qnamespace.h \
+		/usr/include/qt5/QtCore/qglobal.h \
+		/usr/include/qt5/QtCore/qconfig.h \
+		/usr/include/qt5/QtCore/qfeatures.h \
+		/usr/include/qt5/QtCore/qsystemdetection.h \
+		/usr/include/qt5/QtCore/qprocessordetection.h \
+		/usr/include/qt5/QtCore/qcompilerdetection.h \
+		/usr/include/qt5/QtCore/qglobalstatic.h \
+		/usr/include/qt5/QtCore/qatomic.h \
+		/usr/include/qt5/QtCore/qbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt5/QtCore/qgenericatomic.h \
+		/usr/include/qt5/QtCore/qatomic_msvc.h \
+		/usr/include/qt5/QtCore/qatomic_integrity.h \
+		/usr/include/qt5/QtCore/qoldbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_vxworks.h \
+		/usr/include/qt5/QtCore/qatomic_power.h \
+		/usr/include/qt5/QtCore/qatomic_alpha.h \
+		/usr/include/qt5/QtCore/qatomic_armv7.h \
+		/usr/include/qt5/QtCore/qatomic_armv6.h \
+		/usr/include/qt5/QtCore/qatomic_armv5.h \
+		/usr/include/qt5/QtCore/qatomic_bfin.h \
+		/usr/include/qt5/QtCore/qatomic_ia64.h \
+		/usr/include/qt5/QtCore/qatomic_mips.h \
+		/usr/include/qt5/QtCore/qatomic_s390.h \
+		/usr/include/qt5/QtCore/qatomic_sh4a.h \
+		/usr/include/qt5/QtCore/qatomic_sparc.h \
+		/usr/include/qt5/QtCore/qatomic_gcc.h \
+		/usr/include/qt5/QtCore/qatomic_x86.h \
+		/usr/include/qt5/QtCore/qatomic_cxx11.h \
+		/usr/include/qt5/QtCore/qatomic_unix.h \
+		/usr/include/qt5/QtCore/qmutex.h \
+		/usr/include/qt5/QtCore/qlogging.h \
+		/usr/include/qt5/QtCore/qflags.h \
+		/usr/include/qt5/QtCore/qtypeinfo.h \
+		/usr/include/qt5/QtCore/qtypetraits.h \
+		/usr/include/qt5/QtCore/qsysinfo.h \
+		/usr/include/qt5/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt5/QtCore/qstring.h \
+		/usr/include/qt5/QtCore/qchar.h \
+		/usr/include/qt5/QtCore/qbytearray.h \
+		/usr/include/qt5/QtCore/qrefcount.h \
+		/usr/include/qt5/QtCore/qarraydata.h \
+		/usr/include/qt5/QtCore/qstringbuilder.h \
+		/usr/include/qt5/QtCore/qlist.h \
+		/usr/include/qt5/QtCore/qalgorithms.h \
+		/usr/include/qt5/QtCore/qiterator.h \
+		/usr/include/qt5/QtCore/qcoreevent.h \
+		/usr/include/qt5/QtCore/qscopedpointer.h \
+		/usr/include/qt5/QtCore/qmetatype.h \
+		/usr/include/qt5/QtCore/qvarlengtharray.h \
+		/usr/include/qt5/QtCore/qcontainerfwd.h \
+		/usr/include/qt5/QtCore/qisenum.h \
+		/usr/include/qt5/QtCore/qobject_impl.h \
+		FileDownloader.h \
+		OS.h \
+		vkbase.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h \
+		musicdownloader.h
+	/usr/lib/i386-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/i386-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/i686-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/i686-linux-gnu/4.8/include-fixed -I/usr/include/i386-linux-gnu -I/usr/include musicdownloader.h -o moc_musicdownloader.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -924,6 +1211,17 @@ main.o: main.cpp /usr/include/qt5/QtWidgets/QApplication \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
 		/usr/include/qt5/QtWidgets/QHBoxLayout \
+		/usr/include/qt5/QtWidgets/QMenu \
+		/usr/include/qt5/QtWidgets/qmenu.h \
+		/usr/include/qt5/QtWidgets/qaction.h \
+		/usr/include/qt5/QtWidgets/qactiongroup.h \
+		/usr/include/qt5/QtWidgets/QFileDialog \
+		/usr/include/qt5/QtWidgets/qfiledialog.h \
+		/usr/include/qt5/QtCore/qdir.h \
+		/usr/include/qt5/QtCore/qfileinfo.h \
+		/usr/include/qt5/QtWidgets/QAction \
+		/usr/include/qt5/QtWidgets/QMenuBar \
+		/usr/include/qt5/QtWidgets/qmenubar.h \
 		authwidget.h \
 		/usr/include/qt5/QtWidgets/QWidget \
 		musiclist.h \
@@ -947,18 +1245,43 @@ main.o: main.cpp /usr/include/qt5/QtWidgets/QApplication \
 		/usr/include/qt5/QtWidgets/qrubberband.h \
 		/usr/include/qt5/QtWidgets/QListWidgetItem \
 		/usr/include/qt5/QtCore/QString \
+		/usr/include/qt5/QtGui/QMovie \
+		/usr/include/qt5/QtGui/qmovie.h \
+		/usr/include/qt5/QtGui/qimagereader.h \
+		/usr/include/qt5/QtGui/qimageiohandler.h \
+		/usr/include/qt5/QtCore/qplugin.h \
+		/usr/include/qt5/QtCore/qpointer.h \
+		/usr/include/qt5/QtCore/qjsonobject.h \
+		/usr/include/qt5/QtCore/qjsonvalue.h \
+		/usr/include/qt5/QtCore/qfactoryinterface.h \
 		/usr/include/qt5/QtWidgets/QMessageBox \
 		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		vkapi.h \
-		jsoncpp/include/json/json.h \
-		jsoncpp/include/json/autolink.h \
-		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/writer.h \
 		jsoncpp/include/json/value.h \
 		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/config.h \
+		settingswidget.h \
+		/usr/include/qt5/QtWidgets/QCheckBox \
+		/usr/include/qt5/QtWidgets/qcheckbox.h \
+		/usr/include/qt5/QtWidgets/QGroupBox \
+		/usr/include/qt5/QtWidgets/qgroupbox.h \
+		settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
 		jsoncpp/include/json/reader.h \
 		jsoncpp/include/json/features.h \
-		jsoncpp/include/json/writer.h \
-		FileDownloader.h
+		fileoperations.h \
+		vkmusic.h \
+		vkbase.h \
+		musicdownloader.h \
+		/usr/include/qt5/QtCore/QObject \
+		FileDownloader.h \
+		OS.h \
+		/usr/include/qt5/QtCore/QThread \
+		/usr/include/qt5/QtCore/qthread.h \
+		/usr/include/qt5/QtWidgets/QTextEdit \
+		/usr/include/qt5/QtWidgets/qtextedit.h \
+		/usr/include/qt5/QtGui/qtextdocument.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 window.o: window.cpp window.h \
@@ -1090,6 +1413,17 @@ window.o: window.cpp window.h \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
 		/usr/include/qt5/QtWidgets/QHBoxLayout \
+		/usr/include/qt5/QtWidgets/QMenu \
+		/usr/include/qt5/QtWidgets/qmenu.h \
+		/usr/include/qt5/QtWidgets/qaction.h \
+		/usr/include/qt5/QtWidgets/qactiongroup.h \
+		/usr/include/qt5/QtWidgets/QFileDialog \
+		/usr/include/qt5/QtWidgets/qfiledialog.h \
+		/usr/include/qt5/QtCore/qdir.h \
+		/usr/include/qt5/QtCore/qfileinfo.h \
+		/usr/include/qt5/QtWidgets/QAction \
+		/usr/include/qt5/QtWidgets/QMenuBar \
+		/usr/include/qt5/QtWidgets/qmenubar.h \
 		authwidget.h \
 		/usr/include/qt5/QtWidgets/QWidget \
 		musiclist.h \
@@ -1113,18 +1447,50 @@ window.o: window.cpp window.h \
 		/usr/include/qt5/QtWidgets/qrubberband.h \
 		/usr/include/qt5/QtWidgets/QListWidgetItem \
 		/usr/include/qt5/QtCore/QString \
+		/usr/include/qt5/QtGui/QMovie \
+		/usr/include/qt5/QtGui/qmovie.h \
+		/usr/include/qt5/QtGui/qimagereader.h \
+		/usr/include/qt5/QtGui/qimageiohandler.h \
+		/usr/include/qt5/QtCore/qplugin.h \
+		/usr/include/qt5/QtCore/qpointer.h \
+		/usr/include/qt5/QtCore/qjsonobject.h \
+		/usr/include/qt5/QtCore/qjsonvalue.h \
+		/usr/include/qt5/QtCore/qfactoryinterface.h \
 		/usr/include/qt5/QtWidgets/QMessageBox \
 		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		vkapi.h \
-		jsoncpp/include/json/json.h \
-		jsoncpp/include/json/autolink.h \
-		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/writer.h \
 		jsoncpp/include/json/value.h \
 		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/config.h \
+		settingswidget.h \
+		/usr/include/qt5/QtWidgets/QCheckBox \
+		/usr/include/qt5/QtWidgets/qcheckbox.h \
+		/usr/include/qt5/QtWidgets/QGroupBox \
+		/usr/include/qt5/QtWidgets/qgroupbox.h \
+		settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
 		jsoncpp/include/json/reader.h \
 		jsoncpp/include/json/features.h \
-		jsoncpp/include/json/writer.h \
-		FileDownloader.h
+		fileoperations.h \
+		vkmusic.h \
+		vkbase.h \
+		musicdownloader.h \
+		/usr/include/qt5/QtCore/QObject \
+		FileDownloader.h \
+		OS.h \
+		/usr/include/qt5/QtCore/QThread \
+		/usr/include/qt5/QtCore/qthread.h \
+		/usr/include/qt5/QtWidgets/QTextEdit \
+		/usr/include/qt5/QtWidgets/qtextedit.h \
+		/usr/include/qt5/QtGui/qtextdocument.h \
+		/usr/include/qt5/QtWidgets/QApplication \
+		/usr/include/qt5/QtWidgets/qapplication.h \
+		/usr/include/qt5/QtCore/qcoreapplication.h \
+		/usr/include/qt5/QtCore/qeventloop.h \
+		/usr/include/qt5/QtWidgets/qdesktopwidget.h \
+		/usr/include/qt5/QtGui/qguiapplication.h \
+		/usr/include/qt5/QtGui/qinputmethod.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o window.o window.cpp
 
 authwidget.o: authwidget.cpp authwidget.h \
@@ -1257,19 +1623,8 @@ authwidget.o: authwidget.cpp authwidget.h \
 		/usr/include/qt5/QtGui/qicon.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o authwidget.o authwidget.cpp
 
-vkapi.o: vkapi.cpp vkapi.h \
-		jsoncpp/include/json/json.h \
-		jsoncpp/include/json/autolink.h \
-		jsoncpp/include/json/config.h \
-		jsoncpp/include/json/value.h \
-		jsoncpp/include/json/forwards.h \
-		jsoncpp/include/json/reader.h \
-		jsoncpp/include/json/features.h \
-		jsoncpp/include/json/writer.h \
-		FileDownloader.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o vkapi.o vkapi.cpp
-
-FileDownloader.o: FileDownloader.cpp FileDownloader.h
+FileDownloader.o: FileDownloader.cpp FileDownloader.h \
+		OS.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o FileDownloader.o FileDownloader.cpp
 
 musiclist.o: musiclist.cpp musiclist.h \
@@ -1411,8 +1766,275 @@ musiclist.o: musiclist.cpp musiclist.h \
 		/usr/include/qt5/QtCore/QString \
 		/usr/include/qt5/QtWidgets/QPushButton \
 		/usr/include/qt5/QtWidgets/qpushbutton.h \
-		/usr/include/qt5/QtWidgets/qabstractbutton.h
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtGui/QMovie \
+		/usr/include/qt5/QtGui/qmovie.h \
+		/usr/include/qt5/QtGui/qimagereader.h \
+		/usr/include/qt5/QtGui/qimageiohandler.h \
+		/usr/include/qt5/QtCore/qplugin.h \
+		/usr/include/qt5/QtCore/qpointer.h \
+		/usr/include/qt5/QtCore/qjsonobject.h \
+		/usr/include/qt5/QtCore/qjsonvalue.h \
+		/usr/include/qt5/QtCore/qfactoryinterface.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o musiclist.o musiclist.cpp
+
+settingswidget.o: settingswidget.cpp settingswidget.h \
+		/usr/include/qt5/QtWidgets/QDialog \
+		/usr/include/qt5/QtWidgets/qdialog.h \
+		/usr/include/qt5/QtWidgets/qwidget.h \
+		/usr/include/qt5/QtGui/qwindowdefs.h \
+		/usr/include/qt5/QtCore/qglobal.h \
+		/usr/include/qt5/QtCore/qconfig.h \
+		/usr/include/qt5/QtCore/qfeatures.h \
+		/usr/include/qt5/QtCore/qsystemdetection.h \
+		/usr/include/qt5/QtCore/qprocessordetection.h \
+		/usr/include/qt5/QtCore/qcompilerdetection.h \
+		/usr/include/qt5/QtCore/qglobalstatic.h \
+		/usr/include/qt5/QtCore/qatomic.h \
+		/usr/include/qt5/QtCore/qbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt5/QtCore/qgenericatomic.h \
+		/usr/include/qt5/QtCore/qatomic_msvc.h \
+		/usr/include/qt5/QtCore/qatomic_integrity.h \
+		/usr/include/qt5/QtCore/qoldbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_vxworks.h \
+		/usr/include/qt5/QtCore/qatomic_power.h \
+		/usr/include/qt5/QtCore/qatomic_alpha.h \
+		/usr/include/qt5/QtCore/qatomic_armv7.h \
+		/usr/include/qt5/QtCore/qatomic_armv6.h \
+		/usr/include/qt5/QtCore/qatomic_armv5.h \
+		/usr/include/qt5/QtCore/qatomic_bfin.h \
+		/usr/include/qt5/QtCore/qatomic_ia64.h \
+		/usr/include/qt5/QtCore/qatomic_mips.h \
+		/usr/include/qt5/QtCore/qatomic_s390.h \
+		/usr/include/qt5/QtCore/qatomic_sh4a.h \
+		/usr/include/qt5/QtCore/qatomic_sparc.h \
+		/usr/include/qt5/QtCore/qatomic_gcc.h \
+		/usr/include/qt5/QtCore/qatomic_x86.h \
+		/usr/include/qt5/QtCore/qatomic_cxx11.h \
+		/usr/include/qt5/QtCore/qatomic_unix.h \
+		/usr/include/qt5/QtCore/qmutex.h \
+		/usr/include/qt5/QtCore/qlogging.h \
+		/usr/include/qt5/QtCore/qflags.h \
+		/usr/include/qt5/QtCore/qtypeinfo.h \
+		/usr/include/qt5/QtCore/qtypetraits.h \
+		/usr/include/qt5/QtCore/qsysinfo.h \
+		/usr/include/qt5/QtCore/qobjectdefs.h \
+		/usr/include/qt5/QtCore/qnamespace.h \
+		/usr/include/qt5/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt5/QtGui/qwindowdefs_win.h \
+		/usr/include/qt5/QtCore/qobject.h \
+		/usr/include/qt5/QtCore/qstring.h \
+		/usr/include/qt5/QtCore/qchar.h \
+		/usr/include/qt5/QtCore/qbytearray.h \
+		/usr/include/qt5/QtCore/qrefcount.h \
+		/usr/include/qt5/QtCore/qarraydata.h \
+		/usr/include/qt5/QtCore/qstringbuilder.h \
+		/usr/include/qt5/QtCore/qlist.h \
+		/usr/include/qt5/QtCore/qalgorithms.h \
+		/usr/include/qt5/QtCore/qiterator.h \
+		/usr/include/qt5/QtCore/qcoreevent.h \
+		/usr/include/qt5/QtCore/qscopedpointer.h \
+		/usr/include/qt5/QtCore/qmetatype.h \
+		/usr/include/qt5/QtCore/qvarlengtharray.h \
+		/usr/include/qt5/QtCore/qcontainerfwd.h \
+		/usr/include/qt5/QtCore/qisenum.h \
+		/usr/include/qt5/QtCore/qobject_impl.h \
+		/usr/include/qt5/QtCore/qmargins.h \
+		/usr/include/qt5/QtCore/qrect.h \
+		/usr/include/qt5/QtCore/qsize.h \
+		/usr/include/qt5/QtCore/qpoint.h \
+		/usr/include/qt5/QtGui/qpaintdevice.h \
+		/usr/include/qt5/QtGui/qpalette.h \
+		/usr/include/qt5/QtGui/qcolor.h \
+		/usr/include/qt5/QtGui/qrgb.h \
+		/usr/include/qt5/QtCore/qstringlist.h \
+		/usr/include/qt5/QtCore/qdatastream.h \
+		/usr/include/qt5/QtCore/qiodevice.h \
+		/usr/include/qt5/QtCore/qpair.h \
+		/usr/include/qt5/QtCore/qregexp.h \
+		/usr/include/qt5/QtCore/qstringmatcher.h \
+		/usr/include/qt5/QtGui/qbrush.h \
+		/usr/include/qt5/QtCore/qvector.h \
+		/usr/include/qt5/QtGui/qmatrix.h \
+		/usr/include/qt5/QtGui/qpolygon.h \
+		/usr/include/qt5/QtGui/qregion.h \
+		/usr/include/qt5/QtCore/qline.h \
+		/usr/include/qt5/QtGui/qtransform.h \
+		/usr/include/qt5/QtGui/qpainterpath.h \
+		/usr/include/qt5/QtGui/qimage.h \
+		/usr/include/qt5/QtGui/qpixmap.h \
+		/usr/include/qt5/QtCore/qsharedpointer.h \
+		/usr/include/qt5/QtCore/qshareddata.h \
+		/usr/include/qt5/QtCore/qsharedpointer_impl.h \
+		/usr/include/qt5/QtCore/qhash.h \
+		/usr/include/qt5/QtGui/qfont.h \
+		/usr/include/qt5/QtGui/qfontmetrics.h \
+		/usr/include/qt5/QtGui/qfontinfo.h \
+		/usr/include/qt5/QtWidgets/qsizepolicy.h \
+		/usr/include/qt5/QtGui/qcursor.h \
+		/usr/include/qt5/QtGui/qkeysequence.h \
+		/usr/include/qt5/QtGui/qevent.h \
+		/usr/include/qt5/QtCore/qvariant.h \
+		/usr/include/qt5/QtCore/qmap.h \
+		/usr/include/qt5/QtCore/qdebug.h \
+		/usr/include/qt5/QtCore/qtextstream.h \
+		/usr/include/qt5/QtCore/qlocale.h \
+		/usr/include/qt5/QtCore/qset.h \
+		/usr/include/qt5/QtCore/qcontiguouscache.h \
+		/usr/include/qt5/QtCore/qurl.h \
+		/usr/include/qt5/QtCore/qurlquery.h \
+		/usr/include/qt5/QtCore/qfile.h \
+		/usr/include/qt5/QtCore/qfiledevice.h \
+		/usr/include/qt5/QtGui/qvector2d.h \
+		/usr/include/qt5/QtGui/qtouchdevice.h \
+		/usr/include/qt5/QtWidgets/QVBoxLayout \
+		/usr/include/qt5/QtWidgets/qboxlayout.h \
+		/usr/include/qt5/QtWidgets/qlayout.h \
+		/usr/include/qt5/QtWidgets/qlayoutitem.h \
+		/usr/include/qt5/QtWidgets/qgridlayout.h \
+		/usr/include/qt5/QtWidgets/QHBoxLayout \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtWidgets/qframe.h \
+		/usr/include/qt5/QtWidgets/QLineEdit \
+		/usr/include/qt5/QtWidgets/qlineedit.h \
+		/usr/include/qt5/QtGui/qtextcursor.h \
+		/usr/include/qt5/QtGui/qtextformat.h \
+		/usr/include/qt5/QtGui/qpen.h \
+		/usr/include/qt5/QtGui/qtextoption.h \
+		/usr/include/qt5/QtWidgets/QCheckBox \
+		/usr/include/qt5/QtWidgets/qcheckbox.h \
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtGui/qicon.h \
+		/usr/include/qt5/QtWidgets/QFileDialog \
+		/usr/include/qt5/QtWidgets/qfiledialog.h \
+		/usr/include/qt5/QtCore/qdir.h \
+		/usr/include/qt5/QtCore/qfileinfo.h \
+		/usr/include/qt5/QtWidgets/QGroupBox \
+		/usr/include/qt5/QtWidgets/qgroupbox.h \
+		/usr/include/qt5/QtWidgets/QPushButton \
+		/usr/include/qt5/QtWidgets/qpushbutton.h \
+		/usr/include/qt5/QtCore/QString \
+		settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h \
+		fileoperations.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o settingswidget.o settingswidget.cpp
+
+vkmusic.o: vkmusic.cpp vkmusic.h \
+		vkbase.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o vkmusic.o vkmusic.cpp
+
+vkbase.o: vkbase.cpp vkbase.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o vkbase.o vkbase.cpp
+
+settings.o: settings.cpp settings.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h \
+		fileoperations.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o settings.o settings.cpp
+
+musicdownloader.o: musicdownloader.cpp musicdownloader.h \
+		/usr/include/qt5/QtCore/QObject \
+		/usr/include/qt5/QtCore/qobject.h \
+		/usr/include/qt5/QtCore/qobjectdefs.h \
+		/usr/include/qt5/QtCore/qnamespace.h \
+		/usr/include/qt5/QtCore/qglobal.h \
+		/usr/include/qt5/QtCore/qconfig.h \
+		/usr/include/qt5/QtCore/qfeatures.h \
+		/usr/include/qt5/QtCore/qsystemdetection.h \
+		/usr/include/qt5/QtCore/qprocessordetection.h \
+		/usr/include/qt5/QtCore/qcompilerdetection.h \
+		/usr/include/qt5/QtCore/qglobalstatic.h \
+		/usr/include/qt5/QtCore/qatomic.h \
+		/usr/include/qt5/QtCore/qbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_bootstrap.h \
+		/usr/include/qt5/QtCore/qgenericatomic.h \
+		/usr/include/qt5/QtCore/qatomic_msvc.h \
+		/usr/include/qt5/QtCore/qatomic_integrity.h \
+		/usr/include/qt5/QtCore/qoldbasicatomic.h \
+		/usr/include/qt5/QtCore/qatomic_vxworks.h \
+		/usr/include/qt5/QtCore/qatomic_power.h \
+		/usr/include/qt5/QtCore/qatomic_alpha.h \
+		/usr/include/qt5/QtCore/qatomic_armv7.h \
+		/usr/include/qt5/QtCore/qatomic_armv6.h \
+		/usr/include/qt5/QtCore/qatomic_armv5.h \
+		/usr/include/qt5/QtCore/qatomic_bfin.h \
+		/usr/include/qt5/QtCore/qatomic_ia64.h \
+		/usr/include/qt5/QtCore/qatomic_mips.h \
+		/usr/include/qt5/QtCore/qatomic_s390.h \
+		/usr/include/qt5/QtCore/qatomic_sh4a.h \
+		/usr/include/qt5/QtCore/qatomic_sparc.h \
+		/usr/include/qt5/QtCore/qatomic_gcc.h \
+		/usr/include/qt5/QtCore/qatomic_x86.h \
+		/usr/include/qt5/QtCore/qatomic_cxx11.h \
+		/usr/include/qt5/QtCore/qatomic_unix.h \
+		/usr/include/qt5/QtCore/qmutex.h \
+		/usr/include/qt5/QtCore/qlogging.h \
+		/usr/include/qt5/QtCore/qflags.h \
+		/usr/include/qt5/QtCore/qtypeinfo.h \
+		/usr/include/qt5/QtCore/qtypetraits.h \
+		/usr/include/qt5/QtCore/qsysinfo.h \
+		/usr/include/qt5/QtCore/qobjectdefs_impl.h \
+		/usr/include/qt5/QtCore/qstring.h \
+		/usr/include/qt5/QtCore/qchar.h \
+		/usr/include/qt5/QtCore/qbytearray.h \
+		/usr/include/qt5/QtCore/qrefcount.h \
+		/usr/include/qt5/QtCore/qarraydata.h \
+		/usr/include/qt5/QtCore/qstringbuilder.h \
+		/usr/include/qt5/QtCore/qlist.h \
+		/usr/include/qt5/QtCore/qalgorithms.h \
+		/usr/include/qt5/QtCore/qiterator.h \
+		/usr/include/qt5/QtCore/qcoreevent.h \
+		/usr/include/qt5/QtCore/qscopedpointer.h \
+		/usr/include/qt5/QtCore/qmetatype.h \
+		/usr/include/qt5/QtCore/qvarlengtharray.h \
+		/usr/include/qt5/QtCore/qcontainerfwd.h \
+		/usr/include/qt5/QtCore/qisenum.h \
+		/usr/include/qt5/QtCore/qobject_impl.h \
+		FileDownloader.h \
+		OS.h \
+		vkbase.h \
+		jsoncpp/include/json/json.h \
+		jsoncpp/include/json/autolink.h \
+		jsoncpp/include/json/config.h \
+		jsoncpp/include/json/value.h \
+		jsoncpp/include/json/forwards.h \
+		jsoncpp/include/json/reader.h \
+		jsoncpp/include/json/features.h \
+		jsoncpp/include/json/writer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o musicdownloader.o musicdownloader.cpp
 
 moc_window.o: moc_window.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_window.o moc_window.cpp
@@ -1422,6 +2044,12 @@ moc_authwidget.o: moc_authwidget.cpp
 
 moc_musiclist.o: moc_musiclist.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_musiclist.o moc_musiclist.cpp
+
+moc_settingswidget.o: moc_settingswidget.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_settingswidget.o moc_settingswidget.cpp
+
+moc_musicdownloader.o: moc_musicdownloader.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_musicdownloader.o moc_musicdownloader.cpp
 
 ####### Install
 

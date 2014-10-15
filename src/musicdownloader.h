@@ -2,6 +2,7 @@
 #define MUSICDOWNLOADER_H
 
 #include <QObject>
+#include <QLabel>
 #include "FileDownloader.h"
 #include "vkbase.h"
 #include <string>
@@ -15,6 +16,8 @@ public:
     void setPath(std::string path);
     void setReplace(bool replace);
 
+    void setOutputTrackLabel(QLabel *w);
+
     std::string getPath() const;
     bool getReplace() const;
 
@@ -23,6 +26,7 @@ private:
     std::vector<std::pair<std::string, std::string> > _tracks;
     std::string _path;
     bool _replace;
+    QLabel* lblOutput;
 
 signals:
 

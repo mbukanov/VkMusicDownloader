@@ -59,6 +59,7 @@ void Window::Authorization()
     {
         this->setFixedSize(300, 400);
         musicList = new MusicList(this);
+        downloader->setOutputTrackLabel(musicList->lblDownloadMusicTitle);
         connect(musicList->btnDownload, SIGNAL(clicked()), this, SLOT(Download()));
 
         delete authWidget;
@@ -112,6 +113,7 @@ void Window::Download()
 void Window::DownloadEnd()
 {
     QMessageBox::warning(this, "OK", "Download is end");
+    musicList->lblDownloadMusicTitle->setText("");
     musicList->StopLoadAnim();
 }
 

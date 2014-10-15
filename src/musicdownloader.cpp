@@ -3,6 +3,7 @@
 MusicDownloader::MusicDownloader(QObject *parent) :
     QObject(parent)
 {
+    lblOutput = NULL;
 }
 
 void MusicDownloader::setMusicList(std::vector<std::pair<std::string, std::string> > &tracks)
@@ -18,6 +19,11 @@ void MusicDownloader::setPath(std::string path)
 void MusicDownloader::setReplace(bool replace)
 {
     _replace = replace;
+}
+
+void MusicDownloader::setOutputTrackLabel(QLabel *w)
+{
+    lblOutput = w;
 }
 
 std::string MusicDownloader::getPath() const
@@ -36,6 +42,10 @@ void MusicDownloader::process()
     {
         std::string url = _tracks[i].first;
         std::string filename = _tracks[i].second;
+
+        if(lblOutput != NULL)
+            lblOutput->setText(QString::fromStdString(filename));
+
         downloader.Download(url, _path, filename, getReplace());
     }
 

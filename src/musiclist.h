@@ -22,6 +22,8 @@ public:
     QMovie *loaderMovie;
     QLabel *movieLabel;
 
+    QLabel * lblDownloadMusicTitle;
+
     QListWidget * musicList;
     QPushButton * btnDownload;
     QPushButton * btnCheckAll;
